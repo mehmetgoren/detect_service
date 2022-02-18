@@ -32,7 +32,7 @@ def main():
     handler = ReadServiceEventHandler(detector, framer)
 
     logger.info('pytorch object detection service will start soon')
-    event_bus = EventBus('read')
+    event_bus = EventBus('read_service')
     event_bus.subscribe(handler)
 
 
