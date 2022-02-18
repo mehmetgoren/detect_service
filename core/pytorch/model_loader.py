@@ -7,10 +7,9 @@ def load_model():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')  # torch.device('cpu')
     half = device.type != 'cpu'
 
-    # model = torch.hub.load(config.torch.model_name, config.torch.model_name_specific,
-    #                        pretrained=True)  # force_reload=True)
+    model = torch.hub.load(config.torch.model_name, config.torch.model_name_specific,
+                           pretrained=True)  # force_reload=True)
 
-    model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, force_reload=True)
     model.to(device)
     if half:
         model.half()  # to FP16
