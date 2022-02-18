@@ -1,9 +1,11 @@
 import base64
+import io
 import json
 import cv2
 from threading import Thread
 import numpy as np
 from typing import List
+from PIL import Image
 
 from common.event_bus.event_bus import EventBus
 from common.event_bus.event_handler import EventHandler
@@ -61,25 +63,25 @@ class ReadServiceEventHandler(EventHandler):
         dic = json.loads(data.decode(self.encoding))
         name = dic['name']
         img_str = dic['img']
-        jpg_original = base64.b64decode(img_str)
-        jpg_as_np = np.frombuffer(jpg_original, dtype=np.uint8)
-        img = cv2.imdecode(jpg_as_np, flags=1)
+        base64_decoded = base64.b64decode(img_str)
+        image = Image.open(io.BytesIO(base64_decoded))
+        img_np = np.asarray(image)
 
-        detected_list: List[BaseDetectedObject] = self.framer.frame(self.detector, img, name)
+        detected_list: List[BaseDetectedObject] = self.framer.frame(self.detector, img_np, name)
         if len(detected_list):
             for detected in detected_list:
                 detected.detected_by = name
-
                 dic = {'file_name': detected.create_unique_key()}
 
                 if self.overlay:
-                    img_to_bytes = cv2.imencode('.jpg', detected.get_image())
+                    img = Image.fromarray(img_np)
+                    buffered = io.BytesIO()
+                    img.save(buffered, format="JPEG")
+                    img_to_bytes = buffered.getvalue()
                     if not len(img_to_bytes) != 1:
                         logger.warning(f'img_to_bytes length is insufficient: {len(img_to_bytes)}')
                         return
-                    img_to_bytes = img_to_bytes[1].tobytes()
-                    base64_img = base64.b64encode(img_to_bytes)
-                    dic['base64_image'] = base64_img.decode(self.encoding)
+                    dic['base64_image'] = base64.b64encode(img_to_bytes).decode()
                 else:
                     dic['base64_image'] = img_str
 
