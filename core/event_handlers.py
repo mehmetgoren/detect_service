@@ -45,7 +45,6 @@ class ReadServiceEventHandler(EventHandler):
     def __init__(self, detector: ObjectDetector, framer: ObjectFramerBase):
         self.detector = detector
         self.framer = framer
-        self.channel = 'read'
         self.redis_event_handler = RedisEventHandler()
         self.encoding = 'utf-8'
         self.overlay = config.handler.read_service_overlay
@@ -93,7 +92,7 @@ class ReadServiceEventHandler(EventHandler):
 # it's kinda proxy for EventBus
 class RedisEventHandler(EventHandler):
     def __init__(self):
-        self.channel = 'detect'
+        self.channel = 'detect_service'
         self.event_bus = EventBus(self.channel)
 
     def handle(self, dic: dict):

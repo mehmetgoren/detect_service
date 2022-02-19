@@ -12,20 +12,22 @@ from common.event_bus.event_bus import EventBus
 from common.utilities import logger, crate_redis_connection, RedisDb
 
 
+def register_detect_service():
+    connection_service = crate_redis_connection(RedisDb.MAIN)
+    service_name = 'jetson_detection_service'
+    heartbeat = HeartbeatRepository(connection_service, service_name)
+    heartbeat.start()
+    service_repository = ServiceRepository(connection_service)
+    service_repository.add(service_name, 'The Object Detection Service®')
+
+
 def create_object_detector_model() -> BaseObjectDetectorModel:
     model = load_model()
     return JetsonbjectDetectorModel(model)
 
 
 def main():
-    service_name = 'jetson_detection_service'
-    # noinspection DuplicatedCode
-    connection = crate_redis_connection(RedisDb.MAIN)
-    heartbeat = HeartbeatRepository(connection, service_name)
-    heartbeat.start()
-
-    service_repository = ServiceRepository(connection)
-    service_repository.add(service_name)
+    register_detect_service()
 
     framer = DrawObjectFramer()
     detector = ImageHashOnceDetector(DeviceType.IOT, create_object_detector_model())
