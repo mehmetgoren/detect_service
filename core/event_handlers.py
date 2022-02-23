@@ -5,7 +5,7 @@ import cv2
 from threading import Thread
 import numpy as np
 from typing import List
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from common.event_bus.event_bus import EventBus
 from common.event_bus.event_handler import EventHandler
@@ -63,7 +63,11 @@ class ReadServiceEventHandler(EventHandler):
         name = dic['name']
         img_str = dic['img']
         base64_decoded = base64.b64decode(img_str)
-        image = Image.open(io.BytesIO(base64_decoded))
+        try:
+            image = Image.open(io.BytesIO(base64_decoded))
+        except UnidentifiedImageError as err:
+            logger.error(f'an error occurred while creating a PIL image from base64 string, err: {err}')
+            return
         img_np = np.asarray(image)
 
         detected_list: List[BaseDetectedObject] = self.framer.frame(self.detector, img_np, name)

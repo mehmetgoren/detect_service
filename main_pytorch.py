@@ -18,7 +18,7 @@ def register_detect_service():
     heartbeat = HeartbeatRepository(connection_service, service_name)
     heartbeat.start()
     service_repository = ServiceRepository(connection_service)
-    service_repository.add(service_name, 'The Object Detection Service®')
+    service_repository.add(service_name, 'The PyTorch Object Detection Service®')
 
 
 def create_object_detector_model() -> BaseObjectDetectorModel:

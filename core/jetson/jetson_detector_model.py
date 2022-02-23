@@ -23,7 +23,7 @@ class JetsonbjectDetectorModel(BaseObjectDetectorModel):
         return boxes
 
     def create_detected_object(self, img: np.array, detected_by: str, box: DetectionBox) -> BaseDetectedObject:
-        ret = Coco91DetectedObject(img, box.confidence, box.cls_idx, self.net.GetClassDesc(box.cls_idx))
+        ret = Coco91DetectedObject(img, box.confidence, box.cls_idx)  # self.net.GetClassDesc(box.cls_idx)
         return ret
 
     def get_detected_object_class_name(self, cls_idx: int) -> str:
