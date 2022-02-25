@@ -35,7 +35,7 @@ def main():
 
     logger.info('jetson object detection service will start soon')
     event_bus = EventBus('read')
-    event_bus.subscribe(handler)
+    event_bus.subscribe_async(handler)
 
 
 if __name__ == '__main__':

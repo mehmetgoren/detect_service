@@ -29,7 +29,7 @@ def main():
 
     logger.info('tensorflow object detection service will start soon')
     event_bus = EventBus('read_service')
-    event_bus.subscribe(handler)
+    event_bus.subscribe_async(handler)
 
 
 if __name__ == '__main__':
