@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow_hub as hub
 
 from common.utilities import config
-from core.models.detected_objects import Coco91DetectedObject, coco91_info, BaseDetectedObject
+from core.models.detected_objects import Coco80DetectedObject, coco80_info, BaseDetectedObject
 from core.models.object_detector_model import BaseObjectDetectorModel, DetectionBox
 from core.tf.detector_models import tf_lite_models, tf_full_models, TfModelLite, TfModelFull
 
@@ -23,9 +23,9 @@ class TfObjectDetectorModel(BaseObjectDetectorModel):
         return self.model.detect(img)
 
     def create_detected_object(self, img: np.array, detected_by: str, box: DetectionBox) -> BaseDetectedObject:
-        obj = Coco91DetectedObject(img, box.confidence, box.cls_idx - 1)
+        obj = Coco80DetectedObject(img, box.confidence, box.cls_idx - 1)
         obj.detected_by = detected_by
         return obj
 
     def get_detected_object_class_name(self, cls_idx: int) -> str:
-        return coco91_info.get_name(cls_idx - 1)
+        return coco80_info.get_name(cls_idx - 1)

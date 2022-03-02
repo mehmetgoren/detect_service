@@ -45,9 +45,9 @@ class ReadServiceEventHandler(EventHandler):
     def __init__(self, detector: ObjectDetector, framer: ObjectFramerBase):
         self.detector = detector
         self.framer = framer
-        self.redis_event_handler = RedisEventHandler()
         self.encoding = 'utf-8'
         self.overlay = config.handler.read_service_overlay
+        self.publisher = EventBus('detect_service')
 
     def handle(self, dic: dict):
         if dic is None or dic['type'] != 'message':
@@ -88,29 +88,7 @@ class ReadServiceEventHandler(EventHandler):
                 else:
                     dic['base64_image'] = img_str
 
-                self.redis_event_handler.handle(dic)
+                event = json.dumps(dic)
+                self.publisher.publish(event)
         else:
             logger.info(f'(camera {name}) detected nothing')
-
-
-# it's kinda proxy for EventBus
-class RedisEventHandler(EventHandler):
-    def __init__(self):
-        self.channel = 'detect_service'
-        self.event_bus = EventBus(self.channel)
-
-    def handle(self, dic: dict):
-        event = json.dumps(dic)
-        self.event_bus.publish(event)
-
-    # def _handle(self, detected: BaseDetectedObject):
-    #     key = detected.create_unique_key()
-    #     img_to_bytes = cv2.imencode('.jpg', detected.get_image())
-    #     if not len(img_to_bytes) != 1:
-    #         logger.warning(f'img_to_bytes length is insufficient: {len(img_to_bytes)}')
-    #         return
-    #     img_to_bytes = img_to_bytes[1].tobytes()
-    #     base64_img = base64.b64encode(img_to_bytes)
-    #     dic = {'file_name': key, 'base64_image': base64_img.decode(self.encoding)}
-    #     event = json.dumps(dic)
-    #     self.event_bus.publish(event)

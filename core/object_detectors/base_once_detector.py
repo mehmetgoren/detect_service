@@ -13,7 +13,9 @@ class BaseOnceDetector(ObjectDetector):
     def __init__(self, device: DeviceType, detector_model: BaseObjectDetectorModel):
         super(BaseOnceDetector, self).__init__(detector_model)
         self.threshold = config.torch.threshold if device == DeviceType.PC else config.jetson.threshold
-        self.white_list = config.torch.white_list if device == DeviceType.PC else config.jetson.white_list
+        _white_list = config.torch.white_list if device == DeviceType.PC else config.jetson.white_list
+        self.white_list_len: int = len(_white_list)
+        self.white_list = {index: True for index in _white_list}
         self.collection = OnceObjectDetectorList()  # works with numpy array image
         self.type_name = type(self).__name__
 
@@ -53,7 +55,7 @@ class BaseOnceDetector(ObjectDetector):
             return False
 
     def get_detect_boxes(self, img: np.array, detected_by: str) -> List[DetectionBox]:
-        if len(self.white_list) == 0:
+        if self.white_list_len == 0:
             return []
 
         boxes: List[DetectionBox] = self.concrete.get_detect_boxes(img, detected_by)
