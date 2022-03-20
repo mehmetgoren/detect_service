@@ -1,15 +1,15 @@
 import numpy as np
 import cv2
+from redis.client import Redis
 
-from common.config import DeviceType
 from common.utilities import config
 from core.object_detectors.base_once_detector import BaseOnceDetector
 from core.models.object_detector_model import BaseObjectDetectorModel
 
 
 class PsnrOnceDetector(BaseOnceDetector):
-    def __init__(self, device: DeviceType, detector_model: BaseObjectDetectorModel):
-        super(PsnrOnceDetector, self).__init__(device, detector_model)
+    def __init__(self, connection: Redis, detector_model: BaseObjectDetectorModel):
+        super(PsnrOnceDetector, self).__init__(connection, detector_model)
         self.psnr_threshold = config.once_detector.psnr_threshold
 
     def _process_img(self, whole_img: np.array):

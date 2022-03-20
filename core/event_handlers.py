@@ -1,44 +1,64 @@
 import base64
 import io
 import json
-import cv2
+from enum import IntEnum
 from threading import Thread
 import numpy as np
 from typing import List
 from PIL import Image, UnidentifiedImageError
+from redis.client import Redis
 
 from common.event_bus.event_bus import EventBus
 from common.event_bus.event_handler import EventHandler
 from common.utilities import logger, config
+from core.data.od_cache import OdCache
 from core.models.detected_objects import BaseDetectedObject
 from core.object_detectors.object_detector import ObjectDetector
 from core.object_framers import ObjectFramerBase
 
 
-class SaveImageEventHandler(EventHandler):
+class ModelChanged:
     def __init__(self):
-        self.folder_path = config.handler.save_image_folder_path
-        self.file_extension = config.handler.save_image_extension
-
-    def handle(self, detected: BaseDetectedObject):
-        key = detected.create_unique_key()
-        file_name = f'{self.folder_path}/{key}.{self.file_extension}'
-        cv2.imwrite(file_name, detected.get_image())
+        self.source_id: str = ''
 
 
-class ShowImageEventHandler(EventHandler):
+class ModelChangedOp(IntEnum):
+    SAVE = 0
+    DELETE = 1
+
+
+class DataChangedEvent:
     def __init__(self):
-        self.wait_key = config.handler.show_image_wait_key
-        self.caption = config.handler.show_image_caption
-        self.fullscreen = config.handler.show_image_fullscreen
+        self.model_name: str = ''
+        self.params_json: str = ''
+        self.op: ModelChangedOp = ModelChangedOp.SAVE
 
-    def handle(self, detected: BaseDetectedObject):
-        caption = detected.get_text() if self.caption else 'window'
-        if self.fullscreen:
-            cv2.namedWindow(caption, cv2.WND_PROP_FULLSCREEN)
-            cv2.setWindowProperty(caption, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        cv2.imshow(caption, detected.get_image())
-        return cv2.waitKey(self.wait_key)
+
+class DataChangedEventHandler(EventHandler):
+    def __init__(self, connection: Redis):
+        self.channel = 'data_changed'
+        self.encoding = 'utf-8'
+        self.cache = OdCache(connection)
+
+    def handle(self, dic: dict):
+        if dic is None or dic['type'] != 'message':
+            return
+
+        data: bytes = dic['data']
+        dic = json.loads(data.decode(self.encoding))
+        event = DataChangedEvent()
+        event.__dict__.update(dic)
+        if event.model_name != 'od':
+            return
+        mc = ModelChanged()
+        dic = json.loads(event.params_json)
+        mc.__dict__.update(dic)
+        if event.op == ModelChangedOp.SAVE:
+            self.cache.refresh(mc.source_id)
+        elif event.op == ModelChangedOp.DELETE:
+            self.cache.remove(mc.source_id)
+        else:
+            raise NotImplementedError(event.op)
 
 
 class ReadServiceEventHandler(EventHandler):
@@ -46,7 +66,7 @@ class ReadServiceEventHandler(EventHandler):
         self.detector = detector
         self.framer = framer
         self.encoding = 'utf-8'
-        self.overlay = config.handler.read_service_overlay
+        self.overlay = config.ai.read_service_overlay
         self.publisher = EventBus('detect_service')
 
     def handle(self, dic: dict):
@@ -61,6 +81,7 @@ class ReadServiceEventHandler(EventHandler):
         data: bytes = dic['data']
         dic = json.loads(data.decode(self.encoding))
         name = dic['name']
+        source_id = dic['source']
         img_str = dic['img']
         base64_decoded = base64.b64decode(img_str)
         try:
@@ -70,10 +91,10 @@ class ReadServiceEventHandler(EventHandler):
             return
         img_np = np.asarray(image)
 
-        detected_list: List[BaseDetectedObject] = self.framer.frame(self.detector, img_np, name)
+        detected_list: List[BaseDetectedObject] = self.framer.frame(self.detector, img_np, source_id)
         if len(detected_list):
             for detected in detected_list:
-                detected.detected_by = name
+                detected.detected_by = source_id
                 dic = {'file_name': detected.create_unique_key()}
 
                 if self.overlay:

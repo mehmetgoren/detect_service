@@ -1,21 +1,19 @@
 from abc import abstractmethod
 from typing import List
 import numpy as np
+from redis.client import Redis
 
-from common.config import DeviceType
-from common.utilities import logger, config
+from common.utilities import logger
+from core.data.od_cache import OdCache
 from core.object_detectors.object_detector import ObjectDetector
 from core.models.object_detector_model import BaseObjectDetectorModel, BaseDetectedObject, DetectionBox
 
 
 # Also make sure it performant good on jetson nano.
 class BaseOnceDetector(ObjectDetector):
-    def __init__(self, device: DeviceType, detector_model: BaseObjectDetectorModel):
+    def __init__(self, connection: Redis, detector_model: BaseObjectDetectorModel):
         super(BaseOnceDetector, self).__init__(detector_model)
-        self.threshold = config.torch.threshold if device == DeviceType.PC else config.jetson.threshold
-        _white_list = config.torch.white_list if device == DeviceType.PC else config.jetson.white_list
-        self.white_list_len: int = len(_white_list)
-        self.white_list = {index: True for index in _white_list}
+        self.od_cache = OdCache(connection)
         self.collection = OnceObjectDetectorList()  # works with numpy array image
         self.type_name = type(self).__name__
 
@@ -55,19 +53,30 @@ class BaseOnceDetector(ObjectDetector):
             return False
 
     def get_detect_boxes(self, img: np.array, detected_by: str) -> List[DetectionBox]:
-        if self.white_list_len == 0:
+        od = self.od_cache.get_od_model(detected_by)
+        if od is None or od.selected_list_length == 0:
             return []
 
         boxes: List[DetectionBox] = self.concrete.get_detect_boxes(img, detected_by)
         ret: List[DetectionBox] = []
         for box in boxes:
             conf, cls_idx = box.confidence, box.cls_idx
-            if cls_idx not in self.white_list:
+            if not od.is_selected(cls_idx):
                 continue
-            if conf <= self.threshold:
+            if not od.check_threshold(cls_idx, conf):
                 logger.warning(
                     f'threshold is lower then expected for {self.get_detected_object_class_name(cls_idx)} ({conf})')
                 continue
+            if od.is_in_mask(box):
+                logger.warning(
+                    f'detected object is in the mask for {self.get_detected_object_class_name(cls_idx)} ({conf})')
+                continue
+
+            if not od.is_in_zone(box):
+                logger.warning(
+                    f'detected object is not in the specified zone for {self.get_detected_object_class_name(cls_idx)} ({conf})')
+                continue
+
             if not self.detected_before(img, detected_by, cls_idx):
                 ret.append(box)
         return ret

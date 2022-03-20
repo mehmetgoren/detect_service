@@ -5,6 +5,5 @@ from common.utilities import config
 
 def load_model():
     name = config.jetson.model_name
-    threshold = config.jetson.threshold
-    net = inf.detectNet(name, threshold=threshold)
+    net = inf.detectNet(name, threshold=.1)
     return net

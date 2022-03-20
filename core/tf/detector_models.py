@@ -66,8 +66,7 @@ class BoxPoints:
 
 
 class BaseTfModel(ABC):
-    def __init__(self, hub_model, threshold: float):
-        self.threshold = threshold
+    def __init__(self, hub_model):
         self.hub_model = hub_model
 
     def detect(self, img_np: np.array) -> List[DetectionBox]:
@@ -80,9 +79,7 @@ class BaseTfModel(ABC):
         boxes, scores, classes = self._parse_detections(detections)
         detected_list: List[DetectionBox] = []
         for j, score in enumerate(scores):
-            if score < self.threshold:
-                break
-            cls = int(classes[j])
+            cls = int(classes[j]) - 1
             box = boxes[j]
             points = self._parse_points(img_np, box)
             detection_box = DetectionBox(points.x1, points.y1, points.x2, points.y2, score, cls)
@@ -99,8 +96,8 @@ class BaseTfModel(ABC):
 
 
 class TfModelLite(BaseTfModel):
-    def __init__(self, hub_model, threshold: float):
-        super().__init__(hub_model, threshold)
+    def __init__(self, hub_model):
+        super().__init__(hub_model)
         self.model_name: str = ''
 
     def _parse_detections(self, detections):
@@ -114,8 +111,8 @@ class TfModelLite(BaseTfModel):
 
 
 class TfModelFull(BaseTfModel):
-    def __init__(self, hub_model, threshold: float):
-        super().__init__(hub_model, threshold)
+    def __init__(self, hub_model):
+        super().__init__(hub_model)
         self.model_name: str = ''
 
     def _parse_detections(self, detections):

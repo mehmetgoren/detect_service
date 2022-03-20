@@ -1,16 +1,16 @@
 import numpy as np
 import imagehash
 from PIL import Image
+from redis.client import Redis
 
-from common.config import DeviceType
 from common.utilities import config
 from core.object_detectors.base_once_detector import BaseOnceDetector
 from core.models.object_detector_model import BaseObjectDetectorModel
 
 
 class ImageHashOnceDetector(BaseOnceDetector):
-    def __init__(self, device: DeviceType, detector_model: BaseObjectDetectorModel):
-        super(ImageHashOnceDetector, self).__init__(device, detector_model)
+    def __init__(self, connection: Redis, detector_model: BaseObjectDetectorModel):
+        super(ImageHashOnceDetector, self).__init__(connection, detector_model)
         self.imagehash_threshold = config.once_detector.imagehash_threshold
 
     def _process_img(self, whole_img: np.array):
