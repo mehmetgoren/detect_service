@@ -13,8 +13,7 @@ class Od:
         self.created_at: str = ''
         self.selected_list_length: int = 0
         self.selected_list: dict = {}
-        self.mask: Polygon = Polygon([])
-        self.zone: Polygon = Polygon([])
+        self.zone_list: Polygon = Polygon([])
         self.separator = 'º'
 
     @staticmethod
@@ -31,21 +30,17 @@ class Od:
         index = 0
         points = []
         for j in range(length):
-            x = arr[index]
+            x = float(arr[index])
             index += 1
-            y = arr[index]
+            y = float(arr[index])
             index += 1
             points.append((x, y))
-
-    def is_in_mask(self, do: DetectionBox):
-        if self.mask.length == 0:
-            return False
-        return self.mask.intersects(self.__create_area(do))
+        return Polygon(points)
 
     def is_in_zone(self, do: DetectionBox):
-        if self.zone.length == 0:
+        if self.zone_list.length == 0:
             return True
-        return self.zone.intersects(self.__create_area(do))
+        return self.zone_list.intersects(self.__create_area(do))
 
     def is_selected(self, cls_idx: int):
         return cls_idx in self.selected_list
@@ -67,6 +62,5 @@ class Od:
             for cls_idx in indices:
                 self.selected_list[cls_idx] = float(thresholds[index])
                 index += 1
-        self.mask = self.__create_polygon(od_model.mask, self.separator)
-        self.zone = self.__create_polygon(od_model.zone, self.separator)
+        self.zone_list = self.__create_polygon(od_model.zone_list, self.separator)
         return self

@@ -10,8 +10,7 @@ class OdModel:
         self.created_at: str = ''
         self.threshold_list: str = '0.8'
         self.selected_list: str = '0'
-        self.mask: str = ''
-        self.zone: str = ''
+        self.zone_list: str = ''
 
     def map_from(self, source: SourceModel):
         self.id = source.id

@@ -67,10 +67,6 @@ class BaseOnceDetector(ObjectDetector):
                 logger.warning(
                     f'threshold is lower then expected for {self.get_detected_object_class_name(cls_idx)} ({conf})')
                 continue
-            if od.is_in_mask(box):
-                logger.warning(
-                    f'detected object is in the mask for {self.get_detected_object_class_name(cls_idx)} ({conf})')
-                continue
 
             if not od.is_in_zone(box):
                 logger.warning(
