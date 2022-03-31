@@ -115,13 +115,14 @@ class BaseCocoDetectedObject(BaseDetectedObject):
         return text
 
     def create_unique_key(self) -> str:
-        strings = [''] * 6
+        strings = [''] * 7
         strings[0] = (str(self.detected_by) + self.separator if self.detected_by is not None else '')
-        strings[1] = self.get_pred_cls_name() + self.separator
-        strings[2] = (str(self.track_id) + self.separator if self.track_id is not None else '')
-        strings[3] = '{:.2f}'.format(self.pred_score) + self.separator
-        strings[4] = datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3] + self.separator
-        strings[5] = str(uuid.uuid4().hex)
+        strings[1] = str(self.pred_cls_idx) + self.separator
+        strings[2] = self.get_pred_cls_name() + self.separator
+        strings[3] = (str(self.track_id) + self.separator if self.track_id is not None else '')
+        strings[4] = '{:.2f}'.format(self.pred_score) + self.separator
+        strings[5] = datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3] + self.separator
+        strings[6] = str(uuid.uuid4().hex)
         return ''.join(strings)
 
     @abstractmethod
