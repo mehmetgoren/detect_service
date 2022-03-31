@@ -104,22 +104,23 @@ class BaseCocoDetectedObject(BaseDetectedObject):
         self.pred_cls_idx = pred_cls_idx
         self.track_id = None
         self.detected_by = None
+        self.separator = '_'
 
     def get_image(self) -> np.array:
         return self.img
 
     def get_text(self) -> str:
         text = self.get_pred_cls_name() + (
-            '_' + str(self.track_id) if self.track_id is not None else '') + ' ' + "{:.2f}".format(self.pred_score)
+            self.separator + str(self.track_id) if self.track_id is not None else '') + ' ' + "{:.2f}".format(self.pred_score)
         return text
 
     def create_unique_key(self) -> str:
         strings = [''] * 6
-        strings[0] = (str(self.detected_by) + '_' if self.detected_by is not None else '')
-        strings[1] = self.get_pred_cls_name() + '_'
-        strings[2] = (str(self.track_id) + '_' if self.track_id is not None else '')
-        strings[3] = '{:.2f}'.format(self.pred_score) + '_'
-        strings[4] = datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3] + '_'
+        strings[0] = (str(self.detected_by) + self.separator if self.detected_by is not None else '')
+        strings[1] = self.get_pred_cls_name() + self.separator
+        strings[2] = (str(self.track_id) + self.separator if self.track_id is not None else '')
+        strings[3] = '{:.2f}'.format(self.pred_score) + self.separator
+        strings[4] = datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3] + self.separator
         strings[5] = str(uuid.uuid4().hex)
         return ''.join(strings)
 
