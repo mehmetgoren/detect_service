@@ -3,8 +3,6 @@ import numpy as np
 from typing import Tuple, List
 import matplotlib
 from PIL import ImageColor
-from datetime import datetime
-import uuid
 
 
 class BaseCocoInfo(ABC):
@@ -84,8 +82,12 @@ class BaseDetectedObject(ABC):
         raise NotImplementedError('BaseDetectedObject.get_text()')
 
     @abstractmethod
-    def create_unique_key(self) -> str:
-        raise NotImplementedError('BaseDetectedObject.create_unique_key()')
+    def get_pred_score(self) -> float:
+        raise NotImplementedError('BaseDetectedObject.get_pred_score()')
+
+    @abstractmethod
+    def get_pred_cls_index(self) -> int:
+        raise NotImplementedError('BaseDetectedObject.get_pred_cls_index()')
 
     @abstractmethod
     def get_pred_cls_name(self) -> str:
@@ -114,16 +116,11 @@ class BaseCocoDetectedObject(BaseDetectedObject):
             self.separator + str(self.track_id) if self.track_id is not None else '') + ' ' + "{:.2f}".format(self.pred_score)
         return text
 
-    def create_unique_key(self) -> str:
-        strings = [''] * 7
-        strings[0] = (str(self.detected_by) + self.separator if self.detected_by is not None else '')
-        strings[1] = str(self.pred_cls_idx) + self.separator
-        strings[2] = self.get_pred_cls_name() + self.separator
-        strings[3] = (str(self.track_id) + self.separator if self.track_id is not None else '')
-        strings[4] = '{:.2f}'.format(self.pred_score) + self.separator
-        strings[5] = datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3] + self.separator
-        strings[6] = str(uuid.uuid4().hex)
-        return ''.join(strings)
+    def get_pred_score(self) -> float:
+        return self.pred_score
+
+    def get_pred_cls_index(self) -> int:
+        return self.pred_cls_idx
 
     @abstractmethod
     def _get_pred_cls_name(self, pred_cls_idx: int) -> str:

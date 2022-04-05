@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from shapely.geometry import Polygon
 
@@ -45,14 +46,22 @@ class Test:
         self.od_repository[source_id] = source_id
 
 
-t = Test()
-t.set('t1')
-t.models['models'] = 'model'
+def execute_test():
+    t = Test()
+    t.set('t1')
+    t.models['models'] = 'model'
 
-t2 = Test()
-t2.set('t2')
+    t2 = Test()
+    t2.set('t2')
 
-print(t.od_repository)
-print(t2.od_repository)
-print(Test.models)
+    print(t.od_repository)
+    print(t2.od_repository)
+    print(Test.models)
 
+
+detectedObjects = [{'cls_index': 0, 'cls_name': 'person', 'score': 0.78}, {'cls_index': 1, 'cls_name': 'traffic_light', 'score': 0.43}]
+
+dic = {'file_name': 'Tapo 200 (2)_traffic light_0.41_2022_02_23_02_18_32_206_1fc616a7d1204e158799a6a1071fa6b1',
+       'video_clip_enabled': True, 'detected_objects': detectedObjects}
+
+print(json.dumps(dic))

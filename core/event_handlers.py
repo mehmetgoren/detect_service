@@ -7,6 +7,8 @@ import numpy as np
 from typing import List
 from PIL import Image, UnidentifiedImageError
 from redis.client import Redis
+from datetime import datetime
+import uuid
 
 from common.event_bus.event_bus import EventBus
 from common.event_bus.event_handler import EventHandler
@@ -83,6 +85,8 @@ class ReadServiceEventHandler(EventHandler):
         name = dic['name']
         source_id = dic['source']
         img_str = dic['img']
+        video_clip_enabled = dic['video_clip_enabled']
+
         base64_decoded = base64.b64decode(img_str)
         try:
             image = Image.open(io.BytesIO(base64_decoded))
@@ -93,23 +97,24 @@ class ReadServiceEventHandler(EventHandler):
 
         detected_list: List[BaseDetectedObject] = self.framer.frame(self.detector, img_np, source_id)
         if len(detected_list):
+            if self.overlay:
+                img = Image.fromarray(img_np)
+                buffered = io.BytesIO()
+                img.save(buffered, format="JPEG")
+                img_to_bytes = buffered.getvalue()
+                if not len(img_to_bytes) != 1:
+                    logger.warning(f'img_to_bytes length is insufficient: {len(img_to_bytes)}')
+                    return
+                img_str = base64.b64encode(img_to_bytes).decode()
+
+            detected_dic_list = []
             for detected in detected_list:
-                detected.detected_by = source_id
-                dic = {'file_name': detected.create_unique_key()}
+                detected_dic_list.append({'pred_score': detected.get_pred_score(), 'pred_cls_idx': detected.get_pred_cls_index(),
+                                          'pred_cls_name': detected.get_pred_cls_name()})
 
-                if self.overlay:
-                    img = Image.fromarray(img_np)
-                    buffered = io.BytesIO()
-                    img.save(buffered, format="JPEG")
-                    img_to_bytes = buffered.getvalue()
-                    if not len(img_to_bytes) != 1:
-                        logger.warning(f'img_to_bytes length is insufficient: {len(img_to_bytes)}')
-                        return
-                    dic['base64_image'] = base64.b64encode(img_to_bytes).decode()
-                else:
-                    dic['base64_image'] = img_str
-
-                event = json.dumps(dic)
-                self.publisher.publish(event)
+            dic = {'id': str(uuid.uuid4().hex), 'source_id': source_id, 'created_at': datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3],
+                   'detected_objects': detected_dic_list, 'base64_image': img_str, 'video_clip_enabled': video_clip_enabled}
+            event = json.dumps(dic)
+            self.publisher.publish(event)
         else:
             logger.info(f'(camera {name}) detected nothing')
