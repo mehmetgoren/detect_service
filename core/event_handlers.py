@@ -109,7 +109,7 @@ class ReadServiceEventHandler(EventHandler):
 
             detected_dic_list = []
             for detected in detected_list:
-                detected_dic_list.append({'pred_score': float(str(detected.get_pred_score())), 'pred_cls_idx': detected.get_pred_cls_index(),
+                detected_dic_list.append({'pred_score': float(detected.get_pred_score()), 'pred_cls_idx': detected.get_pred_cls_index(),
                                           'pred_cls_name': detected.get_pred_cls_name()})
 
             dic = {'id': str(uuid.uuid4().hex), 'source_id': source_id, 'created_at': datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3],
