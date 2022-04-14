@@ -69,7 +69,7 @@ class ReadServiceEventHandler(EventHandler):
         self.framer = framer
         self.encoding = 'utf-8'
         self.overlay = config.ai.read_service_overlay
-        self.publisher = EventBus('detect_service')
+        self.publisher = EventBus('od_service')
 
     def handle(self, dic: dict):
         if dic is None or dic['type'] != 'message':
