@@ -85,7 +85,7 @@ class ReadServiceEventHandler(EventHandler):
         name = dic['name']
         source_id = dic['source']
         img_str = dic['img']
-        video_clip_enabled = dic['video_clip_enabled']
+        ai_clip_enabled = dic['ai_clip_enabled']
 
         base64_decoded = base64.b64decode(img_str)
         try:
@@ -113,7 +113,7 @@ class ReadServiceEventHandler(EventHandler):
                                           'pred_cls_name': detected.get_pred_cls_name()})
 
             dic = {'id': str(uuid.uuid4().hex), 'source_id': source_id, 'created_at': datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3],
-                   'detected_objects': detected_dic_list, 'base64_image': img_str, 'video_clip_enabled': video_clip_enabled}
+                   'detected_objects': detected_dic_list, 'base64_image': img_str, 'ai_clip_enabled': ai_clip_enabled}
             event = json.dumps(dic)
             self.publisher.publish(event)
         else:

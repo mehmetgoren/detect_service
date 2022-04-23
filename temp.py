@@ -62,6 +62,6 @@ def execute_test():
 detectedObjects = [{'cls_index': 0, 'cls_name': 'person', 'score': 0.78}, {'cls_index': 1, 'cls_name': 'traffic_light', 'score': 0.43}]
 
 dic = {'file_name': 'Tapo 200 (2)_traffic light_0.41_2022_02_23_02_18_32_206_1fc616a7d1204e158799a6a1071fa6b1',
-       'video_clip_enabled': True, 'detected_objects': detectedObjects}
+       'ai_clip_enabled': True, 'detected_objects': detectedObjects}
 
 print(json.dumps(dic))
