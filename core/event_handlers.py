@@ -68,7 +68,7 @@ class ReadServiceEventHandler(EventHandler):
         self.detector = detector
         self.framer = framer
         self.encoding = 'utf-8'
-        self.overlay = config.ai.read_service_overlay
+        self.overlay = config.ai.overlay
         self.publisher = EventBus('od_service')
 
     def handle(self, dic: dict):
