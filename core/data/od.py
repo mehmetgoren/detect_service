@@ -1,3 +1,6 @@
+import datetime
+from typing import List
+from datetime import timedelta
 from shapely.geometry import Polygon
 
 from core.data.od_model import OdModel
@@ -13,8 +16,13 @@ class Od:
         self.created_at: str = ''
         self.selected_list_length: int = 0
         self.selected_list: dict = {}
-        self.zone_list: Polygon = Polygon([])
+        self.zones_list: List[Polygon] = []
+        self.masks_list: List[Polygon] = []
+        self.start_time: timedelta = timedelta()
+        self.end_time: timedelta = timedelta()
+        self.time_in_enabled: bool = False
         self.separator = 'º'
+        self.array_separator = '+'
 
     @staticmethod
     def __create_area(do: DetectionBox):
@@ -37,16 +45,73 @@ class Od:
             points.append((x, y))
         return Polygon(points)
 
-    def is_in_zone(self, do: DetectionBox):
-        if self.zone_list.length == 0:
-            return True
-        return self.zone_list.intersects(self.__create_area(do))
+    def __create_polygon_list(self, line: str) -> List[Polygon]:
+        ret: List[Polygon] = []
+        if len(line) > 0:
+            ret = []
+            splits = line.split(self.array_separator)
+            for split in splits:
+                zone_list = self.__create_polygon(split, self.separator)
+                ret.append(zone_list)
+        return ret
 
-    def is_selected(self, cls_idx: int):
+    def is_in_zones(self, do: DetectionBox) -> bool:
+        if len(self.zones_list) == 0:
+            return True
+        area = self.__create_area(do)
+        for zone_list in self.zones_list:
+            if zone_list.length == 0:
+                continue
+            if zone_list.intersects(area):
+                return True
+        return False
+
+    def is_in_masks(self, do: DetectionBox) -> bool:
+        if len(self.masks_list) == 0:
+            return False
+        area = self.__create_area(do)
+        for mask_list in self.masks_list:
+            if mask_list.length == 0:
+                continue
+            if mask_list.intersects(area):
+                return True
+        return False
+
+    def is_selected(self, cls_idx: int) -> bool:
         return cls_idx in self.selected_list
 
-    def check_threshold(self, cls_idx: int, threshold: float):
+    def check_threshold(self, cls_idx: int, threshold: float) -> bool:
         return threshold >= self.selected_list[cls_idx]
+
+    def is_in_time(self) -> bool:
+        if not self.time_in_enabled:
+            return True
+        now = datetime.datetime.now()
+        now_time = timedelta(hours=now.hour, minutes=now.minute)
+        return self.start_time <= now_time <= self.end_time
+
+    @staticmethod
+    def __int_try_parse(value) -> (bool, int):
+        try:
+            return True, int(value)
+        except ValueError:
+            return False, value
+
+    @staticmethod
+    def __get_time(time_text: str) -> (bool, timedelta):
+        if len(time_text) == 0:
+            return False, timedelta()
+        splits = time_text.split(':')
+        if len(splits) != 2:
+            return False, timedelta()
+
+        ok, hour = Od.__int_try_parse(splits[0])
+        if not ok:
+            return False, timedelta()
+        ok, minute = Od.__int_try_parse(splits[1])
+        if not ok:
+            return False, timedelta()
+        return True, timedelta(hours=hour, minutes=minute)
 
     def map_from(self, od_model: OdModel):
         self.id = od_model.id
@@ -62,5 +127,11 @@ class Od:
             for cls_idx in indices:
                 self.selected_list[cls_idx] = float(thresholds[index])
                 index += 1
-        self.zone_list = self.__create_polygon(od_model.zone_list, self.separator)
+
+        self.zones_list = self.__create_polygon_list(od_model.zones_list)
+        self.masks_list = self.__create_polygon_list(od_model.masks_list)
+        self.time_in_enabled, self.start_time = self.__get_time(od_model.start_time)
+        if self.time_in_enabled:
+            self.time_in_enabled, self.end_time = self.__get_time(od_model.end_time)
+
         return self

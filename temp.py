@@ -1,4 +1,5 @@
 import datetime
+from datetime import timedelta
 import json
 
 from shapely.geometry import Polygon
@@ -59,9 +60,27 @@ def execute_test():
     print(Test.models)
 
 
-detectedObjects = [{'cls_index': 0, 'cls_name': 'person', 'score': 0.78}, {'cls_index': 1, 'cls_name': 'traffic_light', 'score': 0.43}]
+def json_test():
+    detected_objects = [{'cls_index': 0, 'cls_name': 'person', 'score': 0.78}, {'cls_index': 1, 'cls_name': 'traffic_light', 'score': 0.43}]
+    dic = {'file_name': 'Tapo 200 (2)_traffic light_0.41_2022_02_23_02_18_32_206_1fc616a7d1204e158799a6a1071fa6b1',
+           'ai_clip_enabled': True, 'detected_objects': detected_objects}
+    print(json.dumps(dic))
 
-dic = {'file_name': 'Tapo 200 (2)_traffic light_0.41_2022_02_23_02_18_32_206_1fc616a7d1204e158799a6a1071fa6b1',
-       'ai_clip_enabled': True, 'detected_objects': detectedObjects}
 
-print(json.dumps(dic))
+def time_test():
+    event_time = timedelta(hours=14, minutes=7)
+
+    start_time = timedelta(hours=0, minutes=0)
+    end_time = timedelta(hours=7, minutes=0)
+
+    start = datetime.datetime.now()
+    l = 10000000
+    for j in range(l):
+        _ = (start_time <= event_time <= end_time)
+        # print((start_time <= event_time <= end_time))
+    end = datetime.datetime.now()
+
+    print(f'result: {(end - start).seconds}')
+
+
+time_test()
