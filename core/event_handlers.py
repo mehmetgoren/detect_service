@@ -7,12 +7,11 @@ import numpy as np
 from typing import List
 from PIL import Image, UnidentifiedImageError
 from redis.client import Redis
-from datetime import datetime
 import uuid
 
 from common.event_bus.event_bus import EventBus
 from common.event_bus.event_handler import EventHandler
-from common.utilities import logger, config
+from common.utilities import logger, config, datetime_now
 from core.data.od_cache import OdCache
 from core.models.detected_objects import BaseDetectedObject
 from core.object_detectors.object_detector import ObjectDetector
@@ -112,7 +111,7 @@ class ReadServiceEventHandler(EventHandler):
                 detected_dic_list.append({'pred_score': float(detected.get_pred_score()), 'pred_cls_idx': detected.get_pred_cls_index(),
                                           'pred_cls_name': detected.get_pred_cls_name()})
 
-            dic = {'id': str(uuid.uuid4().hex), 'source_id': source_id, 'created_at': datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3],
+            dic = {'id': str(uuid.uuid4().hex), 'source_id': source_id, 'created_at': datetime_now(),
                    'detected_objects': detected_dic_list, 'base64_image': img_str, 'ai_clip_enabled': ai_clip_enabled}
             event = json.dumps(dic)
             self.publisher.publish(event)
