@@ -27,4 +27,4 @@ class JetsonbjectDetectorModel(BaseObjectDetectorModel):
         return ret
 
     def get_detected_object_class_name(self, cls_idx: int) -> str:
-        return self.net.GetClassDesc(min(cls_idx + 1, 90))
+        return self.net.GetClassDesc(max(cls_idx - 1, 0))
