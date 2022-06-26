@@ -6,8 +6,8 @@ from datetime import datetime
 from common.config import Config, config_redis
 
 logger = logging.getLogger('logger')
-logger.setLevel(logging.INFO)
-logging.basicConfig(level=logging.INFO)
+logger.setLevel(logging.WARNING)
+logging.basicConfig(level=logging.WARNING)
 
 config: Config = Config.create()
 
@@ -15,6 +15,7 @@ config: Config = Config.create()
 class RedisDb(IntEnum):
     MAIN = 0
     RQ = 1
+    RQ2 = 2
     EVENTBUS = 15
 
 
