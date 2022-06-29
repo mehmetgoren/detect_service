@@ -28,7 +28,8 @@ class OdCache:
         return OdCache.models[detected_by]
 
     def refresh(self, detected_by: str) -> Od:
-        del OdCache.models[detected_by]
+        if detected_by in OdCache.models:
+            del OdCache.models[detected_by]
         return self.get_od_model(detected_by)
 
     @staticmethod
