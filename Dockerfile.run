@@ -3,3 +3,8 @@ gokalpgoren
         amd64:
             docker build -t gokalpgoren/detect_service_pytorch:v1.0.0-amd64 .
             docker run -it --restart unless-stopped --name detect_service_pytorch-instance --net host --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all gokalpgoren/detect_service_pytorch:v1.0.0-amd64
+
+    tf:
+        amd64:
+            docker build -t gokalpgoren/detect_service_tf:v1.0.0-amd64 .
+            docker run -it --restart unless-stopped --name detect_service_tf-instance --net host --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all gokalpgoren/detect_service_tf:v1.0.0-amd64
