@@ -15,7 +15,7 @@ def create_object_detector_model() -> BaseObjectDetectorModel:
 
 
 def main():
-    conn = register_detect_service('pytorch_detection_service', 'The PyTorch Object Detection Service®')
+    conn = register_detect_service('pytorch_detection_service', 'detect_service_pytorch-instance', 'The PyTorch Object Detection Service®')
     listen_data_changed_event(conn)
 
     framer = DrawObjectFramer()

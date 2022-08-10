@@ -9,12 +9,12 @@ from common.utilities import logger, crate_redis_connection, RedisDb
 from core.event_handlers import DataChangedEventHandler
 
 
-def register_detect_service(service_name: str, description: str):
+def register_detect_service(service_name: str, instance_name: str, description: str):
     connection_main = crate_redis_connection(RedisDb.MAIN)
     heartbeat = HeartbeatRepository(connection_main, service_name)
     heartbeat.start()
     service_repository = ServiceRepository(connection_main)
-    service_repository.add(service_name, description)
+    service_repository.add(service_name, instance_name, description)
     return connection_main
 
 

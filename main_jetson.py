@@ -15,7 +15,7 @@ def create_object_detector_model() -> BaseObjectDetectorModel:
 
 
 def main():
-    conn = register_detect_service('jetson_detection_service', 'The Jetson Object Detection Service®')
+    conn = register_detect_service('jetson_detection_service', 'detect_service_jetson-instance', 'The Jetson Object Detection Service®')
     listen_data_changed_event(conn)
 
     framer = DrawObjectFramer()

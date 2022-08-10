@@ -8,7 +8,7 @@ from core.utilities import listen_data_changed_event, register_detect_service
 
 
 def main():
-    conn = register_detect_service('tensorflow_detection_service', 'The Tensorflow Object Detection Service®')
+    conn = register_detect_service('tensorflow_detection_service', 'detect_service_tf-instance', 'The Tensorflow Object Detection Service®')
     listen_data_changed_event(conn)
 
     detector_model = TfObjectDetectorModel()

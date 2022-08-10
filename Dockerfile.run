@@ -1,0 +1,5 @@
+gokalpgoren
+    pytorch:
+        amd64:
+            docker build -t gokalpgoren/detect_service_pytorch:v1.0.0-amd64 .
+            docker run -it --restart unless-stopped --name detect_service_pytorch-instance --net host --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all gokalpgoren/detect_service_pytorch:v1.0.0-amd64
