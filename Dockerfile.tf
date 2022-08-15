@@ -9,7 +9,6 @@ RUN apt-get -qq install --no-install-recommends -y python3-pip
 RUN apt-get install ffmpeg libsm6 libxext6 -y
 
 RUN pip3 install ImageHash
-RUN pip3 install matplotlib
 RUN pip3 install numpy
 RUN pip3 install Pillow
 RUN pip3 install psutil
