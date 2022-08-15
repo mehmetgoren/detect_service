@@ -8,3 +8,8 @@ gokalpgoren
         amd64:
             docker build -t gokalpgoren/detect_service_tf:v1.0.0-amd64 .
             docker run -it --restart unless-stopped --name detect_service_tf-instance --net host --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all gokalpgoren/detect_service_tf:v1.0.0-amd64
+
+    jetson:
+        arm64:
+            docker build -t gokalpgoren/detect_service_jetson:v1.0.0-arm64 .
+            docker run -it --restart unless-stopped --name detect_service_jetson-instance --runtime=nvidia --net host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix -v /tmp/argus_socket:/tmp/argus_socket -v /etc/enctune.conf:/etc/enctune.conf -v /home/gokalp/Documents/jetson-inference/data:/jetson-inference/data -v /home/gokalp/Documents/jetson-inference/python/training/classification/data:/jetson-inference/python/training/classification/data -v /home/gokalp/Documents/jetson-inference/python/training/classification/models:/jetson-inference/python/training/classification/models -v /home/gokalp/Documents/jetson-inference/python/training/detection/ssd/data:/jetson-inference/python/training/detection/ssd/data -v /home/gokalp/Documents/jetson-inference/python/training/detection/ssd/models:/jetson-inference/python/training/detection/ssd/models gokalpgoren/detect_service_jetson:v1.0.0-arm64

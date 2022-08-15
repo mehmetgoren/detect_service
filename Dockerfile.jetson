@@ -1,0 +1,17 @@
+FROM dustynv/jetson-inference:r32.7.1
+
+RUN pip3 uninstall Pillow -y
+RUN pip3 install ImageHash
+RUN pip3 install redis
+RUN pip3 install shapely
+RUN pip3 install psutil
+
+WORKDIR /app
+
+COPY . .
+
+RUN dpkg -i jetson_stuff/libgeos-3.6.2_3.6.2-1build2_arm64.deb
+RUN dpkg -i jetson_stuff/libgeos-c1v5_3.6.2-1build2_arm64.deb
+RUN dpkg -i jetson_stuff/libgeos-dev_3.6.2-1build2_arm64.deb
+
+CMD ["python3", "main_jetson.py"]
