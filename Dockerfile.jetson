@@ -10,6 +10,7 @@ WORKDIR /app
 
 COPY . .
 
+RUN dpkg -i jetson_stuff/tzdata_2018d-1_all.deb
 RUN dpkg -i jetson_stuff/libgeos-3.6.2_3.6.2-1build2_arm64.deb
 RUN dpkg -i jetson_stuff/libgeos-c1v5_3.6.2-1build2_arm64.deb
 RUN dpkg -i jetson_stuff/libgeos-dev_3.6.2-1build2_arm64.deb
