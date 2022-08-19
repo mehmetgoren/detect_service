@@ -102,7 +102,7 @@ class ReadServiceEventHandler(EventHandler):
                 img.save(buffered, format="JPEG")
                 img_to_bytes = buffered.getvalue()
                 if not len(img_to_bytes) != 1:
-                    logger.warning(f'img_to_bytes length is insufficient: {len(img_to_bytes)}')
+                    logger.warn(f'img_to_bytes length is insufficient: {len(img_to_bytes)}')
                     return
                 img_str = base64.b64encode(img_to_bytes).decode()
 

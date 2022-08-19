@@ -64,23 +64,20 @@ class BaseOnceDetector(ObjectDetector):
             if not od.is_selected(cls_idx):
                 continue
             if not od.check_threshold(cls_idx, conf):
-                logger.warning(
-                    f'threshold is lower then expected for {self.get_detected_object_class_name(cls_idx)} ({conf})')
+                logger.warn(f'threshold is lower then expected for {self.get_detected_object_class_name(cls_idx)} ({conf})')
                 continue
 
             if not od.is_in_time():
-                logger.warning(
+                logger.warn(
                     f'a detected object({self.get_detected_object_class_name(cls_idx)}, conf:{conf}) was not in time between {od.start_time} and {od.end_time}')
                 continue
 
             if not od.is_in_zones(box):
-                logger.warning(
-                    f'a {self.get_detected_object_class_name(cls_idx)} object was in the specified zone, conf:{conf}')
+                logger.warn(f'a {self.get_detected_object_class_name(cls_idx)} object was in the specified zone, conf:{conf}')
                 continue
 
             if od.is_in_masks(box):
-                logger.warning(
-                    f'a {self.get_detected_object_class_name(cls_idx)} object was detected is in the mask area, conf:{conf}')
+                logger.warn(f'a {self.get_detected_object_class_name(cls_idx)} object was detected is in the mask area, conf:{conf}')
                 continue
 
             if not self.detected_before(img, detected_by, cls_idx):
