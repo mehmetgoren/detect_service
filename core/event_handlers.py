@@ -78,6 +78,7 @@ class ReadServiceEventHandler(EventHandler):
         th.daemon = True
         th.start()
 
+    # you can handle it and add dict to multiprocessing.Queue then execute on a parameterless function by Pool.run_async to provide a real multi-core support
     def _handle(self, dic: dict):
         data: bytes = dic['data']
         dic = json.loads(data.decode(self.encoding))
@@ -102,7 +103,7 @@ class ReadServiceEventHandler(EventHandler):
                 img.save(buffered, format="JPEG")
                 img_to_bytes = buffered.getvalue()
                 if not len(img_to_bytes) != 1:
-                    logger.warn(f'img_to_bytes length is insufficient: {len(img_to_bytes)}')
+                    logger.warning(f'img_to_bytes length is insufficient: {len(img_to_bytes)}')
                     return
                 img_str = base64.b64encode(img_to_bytes).decode()
 

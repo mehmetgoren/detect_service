@@ -20,7 +20,7 @@ class OdCache:
             if od_model is None:
                 source_model = self.source_repository.get(detected_by)
                 if source_model is None:
-                    logger.warn(f'source was not found for Object Detection Model, Detection will not work for {detected_by}')
+                    logger.warning(f'source was not found for Object Detection Model, Detection will not work for {detected_by}')
                     return None
                 od_model = OdModel().map_from(source_model)
                 self.od_repository.add(od_model)
