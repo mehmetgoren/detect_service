@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import List
+
 import numpy as np
 import tensorflow as tf
 
-from core.models.object_detector_model import DetectionBox
+from common.utilities import logger
+from core.models.coco_objects import coco91_object
+from core.models.detections import DetectionResult, DetectionBox
 
 tf_lite_models = {
     'efficientdet/lite0/detection': 'https://tfhub.dev/tensorflow/efficientdet/lite0/detection/1',
@@ -69,22 +72,31 @@ class BaseTfModel(ABC):
     def __init__(self, hub_model):
         self.hub_model = hub_model
 
-    def detect(self, img_np: np.array) -> List[DetectionBox]:
-        # Convert img to RGB
-        rgb_tensor = tf.convert_to_tensor(img_np, dtype=tf.uint8)
-        # Add dims to rgb_tensor
-        rgb_tensor = tf.expand_dims(rgb_tensor, 0)
+    def detect(self, img_np: np.array) -> List[DetectionResult]:
+        ret: List[DetectionResult] = []
+        try:
+            # Convert img to RGB
+            rgb_tensor = tf.convert_to_tensor(img_np, dtype=tf.uint8)
+            # Add dims to rgb_tensor
+            rgb_tensor = tf.expand_dims(rgb_tensor, 0)
 
-        detections = self.hub_model(rgb_tensor)
-        boxes, scores, classes = self._parse_detections(detections)
-        detected_list: List[DetectionBox] = []
-        for j, score in enumerate(scores):
-            cls = int(classes[j]) - 1
-            box = boxes[j]
-            points = self._parse_points(img_np, box)
-            detection_box = DetectionBox(points.x1, points.y1, points.x2, points.y2, score, cls)
-            detected_list.append(detection_box)
-        return detected_list
+            detections = self.hub_model(rgb_tensor)
+            boxes, scores, classes = self._parse_detections(detections)
+            for j, score in enumerate(scores):
+                cls_idx = int(classes[j]) - 1
+                cls_name = coco91_object.get_name(cls_idx)
+
+                box = boxes[j]
+                points = self._parse_points(img_np, box)
+                b = DetectionBox()
+                b.x1, b.y1, b.x2, b.y2 = int(points.x1), int(points.y1), int(points.x2), int(points.y2)
+                r = DetectionResult()
+                r.box = b
+                r.pred_cls_name, r.pred_cls_idx, r.pred_score = cls_name, cls_idx, float(score)
+                ret.append(r)
+        except BaseException as ex:
+            logger.error(f'an error occurred while tensorflow detection call, ex: {ex}')
+        return ret
 
     @abstractmethod
     def _parse_detections(self, detections):

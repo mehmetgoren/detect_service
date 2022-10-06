@@ -1,74 +1,24 @@
 import base64
 import io
 import json
-from enum import IntEnum
 from threading import Thread
 import numpy as np
 from typing import List
 from PIL import Image, UnidentifiedImageError
-from redis.client import Redis
-import uuid
 
 from common.event_bus.event_bus import EventBus
 from common.event_bus.event_handler import EventHandler
-from common.utilities import logger, config, datetime_now
-from core.data.od_cache import OdCache
-from core.models.detected_objects import BaseDetectedObject
-from core.object_detectors.object_detector import ObjectDetector
-from core.object_framers import ObjectFramerBase
-
-
-class ModelChanged:
-    def __init__(self):
-        self.source_id: str = ''
-
-
-class ModelChangedOp(IntEnum):
-    SAVE = 0
-    DELETE = 1
-
-
-class DataChangedEvent:
-    def __init__(self):
-        self.model_name: str = ''
-        self.params_json: str = ''
-        self.op: ModelChangedOp = ModelChangedOp.SAVE
-
-
-class DataChangedEventHandler(EventHandler):
-    def __init__(self, connection: Redis):
-        self.channel = 'data_changed'
-        self.encoding = 'utf-8'
-        self.cache = OdCache(connection)
-
-    def handle(self, dic: dict):
-        if dic is None or dic['type'] != 'message':
-            return
-
-        data: bytes = dic['data']
-        dic = json.loads(data.decode(self.encoding))
-        event = DataChangedEvent()
-        event.__dict__.update(dic)
-        if event.model_name != 'od':
-            return
-        mc = ModelChanged()
-        dic = json.loads(event.params_json)
-        mc.__dict__.update(dic)
-        if event.op == ModelChangedOp.SAVE:
-            self.cache.refresh(mc.source_id)
-        elif event.op == ModelChangedOp.DELETE:
-            self.cache.remove(mc.source_id)
-        else:
-            raise NotImplementedError(event.op)
+from common.utilities import logger, config
+from core.models.detections import BaseDetector, DetectionResult
+from core.utilities import EventChannels
 
 
 class ReadServiceEventHandler(EventHandler):
-    def __init__(self, detector: ObjectDetector, framer: ObjectFramerBase):
+    def __init__(self, detector: BaseDetector):
         self.detector = detector
-        self.framer = framer
         self.encoding = 'utf-8'
         self.overlay = config.ai.overlay
-        self.publisher = EventBus('od_service')
+        self.publisher = EventBus(EventChannels.snapshot_out)
 
     def handle(self, dic: dict):
         if dic is None or dic['type'] != 'message':
@@ -83,11 +33,11 @@ class ReadServiceEventHandler(EventHandler):
         data: bytes = dic['data']
         dic = json.loads(data.decode(self.encoding))
         name = dic['name']
-        source_id = dic['source']
-        img_str = dic['img']
+        source_id = dic['source_id']
+        base64_image = dic['base64_image']
         ai_clip_enabled = dic['ai_clip_enabled']
 
-        base64_decoded = base64.b64decode(img_str)
+        base64_decoded = base64.b64decode(base64_image)
         try:
             image = Image.open(io.BytesIO(base64_decoded))
         except UnidentifiedImageError as err:
@@ -95,25 +45,16 @@ class ReadServiceEventHandler(EventHandler):
             return
         img_np = np.asarray(image)
 
-        detected_list: List[BaseDetectedObject] = self.framer.frame(self.detector, img_np, source_id)
-        if len(detected_list):
-            if self.overlay:
-                img = Image.fromarray(img_np)
-                buffered = io.BytesIO()
-                img.save(buffered, format="JPEG")
-                img_to_bytes = buffered.getvalue()
-                if not len(img_to_bytes) != 1:
-                    logger.warning(f'img_to_bytes length is insufficient: {len(img_to_bytes)}')
-                    return
-                img_str = base64.b64encode(img_to_bytes).decode()
-
+        results: List[DetectionResult] = self.detector.detect(img_np)
+        if len(results) > 0:
             detected_dic_list = []
-            for detected in detected_list:
-                detected_dic_list.append({'pred_score': float(detected.get_pred_score()), 'pred_cls_idx': detected.get_pred_cls_index(),
-                                          'pred_cls_name': detected.get_pred_cls_name()})
+            for r in results:
+                dic_box = {'x1': r.box.x1, 'y1': r.box.y1, 'x2': r.box.x2, 'y2': r.box.y2}
+                dic_result = {'pred_cls_name': r.pred_cls_name, 'pred_cls_idx': r.pred_cls_idx, 'pred_score': r.pred_score, 'box': dic_box}
+                detected_dic_list.append(dic_result)
 
-            dic = {'id': str(uuid.uuid4().hex), 'source_id': source_id, 'created_at': datetime_now(),
-                   'detected_objects': detected_dic_list, 'base64_image': img_str, 'ai_clip_enabled': ai_clip_enabled}
+            dic = {'name': name, 'source': source_id, 'img': base64_image, 'ai_clip_enabled': ai_clip_enabled, 'detections': detected_dic_list,
+                   'channel': EventChannels.od_service, 'list_name': 'detected_objects'}
             event = json.dumps(dic)
             self.publisher.publish(event)
         else:
