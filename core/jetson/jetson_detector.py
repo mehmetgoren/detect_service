@@ -1,4 +1,3 @@
-import numpy.typing as npt
 from typing import List
 import jetson.utils as utils
 
@@ -10,7 +9,7 @@ class JetsonObjectDetector(BaseDetector):
         self.net = net
 
     # noinspection DuplicatedCode
-    def detect(self, img: npt.NDArray) -> List[DetectionResult]:
+    def detect(self, img: any) -> List[DetectionResult]:
         img_cuda = utils.cudaFromNumpy(img)
         detections = self.net.Detect(img_cuda, overlay='OVERLAY_NONE')
 
