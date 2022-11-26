@@ -17,7 +17,7 @@ class JetsonObjectDetector(BaseDetector):
         for d in detections:
             x1, y1, x2, y2 = int(d.Left), int(d.Top), int(d.Right), int(d.Bottom)
             conf, cls_idx = d.Confidence, d.ClassID
-            cls_name = self.net.GetClassDesc(max(cls_idx - 1, 0))
+            cls_name = self.net.GetClassDesc(cls_idx)
 
             box = DetectionBox()
             box.x1, box.y1, box.x2, box.y2 = x1, y1, x2, y2
