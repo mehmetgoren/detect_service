@@ -17,7 +17,6 @@ class ReadServiceEventHandler(EventHandler):
     def __init__(self, detector: BaseDetector):
         self.detector = detector
         self.encoding = 'utf-8'
-        self.overlay = config.ai.overlay
         self.publisher = EventBus(EventChannels.snapshot_out)
 
     def handle(self, dic: dict):
