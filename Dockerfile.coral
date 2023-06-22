@@ -1,0 +1,38 @@
+# Use a debian bullseye base image
+FROM debian:bullseye
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install base dependencies
+RUN apt-get -qq update && apt-get upgrade -y
+RUN apt-get install -y apt-utils
+RUN apt-get install -y tzdata
+RUN apt-get install -y curl
+RUN apt-get install -y gnupg
+RUN apt-get -qq install --no-install-recommends -y python3-pip
+
+# Install Coral TPU dependencies - replace libedgetpu1-std with libedgetpu1-max to use coral TPU at max frequency
+RUN echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | tee /etc/apt/sources.list.d/coral-edgetpu.list
+RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+RUN apt-get update
+RUN apt-get install libedgetpu1-std python3-pycoral -y
+
+# Install necessary Python packages
+RUN pip3 install redis
+RUN pip3 install psutil
+
+# Set the working directory
+WORKDIR /app
+
+# Download the edgetpu model
+RUN mkdir ./models
+RUN curl -sL https://github.com/google-coral/test_data/raw/master/ssdlite_mobiledet_coco_qat_postprocess_edgetpu.tflite -o models/edgetpu_model.tflite
+RUN curl -sL https://github.com/google-coral/test_data/raw/master/coco_labels.txt -o models/edgetpu_labels.txt
+
+# Copy relevant folders into the Docker image
+COPY core ./core
+COPY common ./common
+COPY main_coral.py .
+
+# Run the Coral TPU script
+CMD ["python3", "main_coral.py"]
