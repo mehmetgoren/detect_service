@@ -14,7 +14,7 @@ class CoralObjectDetector(BaseDetector):
 
     # noinspection DuplicatedCode
     def detect(self, img: any) -> List[DetectionResult]:
-        image = Image.fromarray(img)
+        image = Image.fromarray(img, 'RGB')
         # Convert image to expected format
         _, scale = common.set_resized_input(
             self.interpreter, image.size, lambda size: image.resize(size, Image.ANTIALIAS)
